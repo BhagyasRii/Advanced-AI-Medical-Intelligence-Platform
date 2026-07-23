@@ -79,13 +79,15 @@ class Config:
 
     EPOCHS: int = 30
 
-    LR: float = 1e-3
+    LEARNING_RATE: float = 1e-4
 
     FINE_TUNE_LR: float = 1e-4
 
     WEIGHT_DECAY: float = 1e-4
 
     EARLY_STOPPING_PATIENCE: int = 5
+
+    PATIENCE: int = 5
 
 
     # --------------------------

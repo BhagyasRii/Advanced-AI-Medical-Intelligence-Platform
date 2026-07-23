@@ -1,36 +1,44 @@
-from torch.optim import Adam
-
 from configs.config import cfg
+
 from src.data.download import download_dataset
 from src.data.dataset import ChestXRayDataset
 from src.data.loaders import create_loaders
+
 from src.models.densenet121 import build_model
 from src.models.losses import get_loss
-from src.models.trainer import train_one_epoch
+
+from src.training.optimizer import get_optimizer
+from src.training.scheduler import get_scheduler
+from src.training.engine import fit
 
 
-dataset_path = download_dataset()
+def main():
 
-dataset = ChestXRayDataset(dataset_path)
+    dataset_path = download_dataset()
 
-train_loader, _, _ = create_loaders(dataset)
+    dataset = ChestXRayDataset(dataset_path)
 
-model = build_model().to(cfg.DEVICE)
+    train_loader, val_loader, _ = create_loaders(dataset)
 
-criterion = get_loss()
+    model = build_model().to(cfg.DEVICE)
 
-optimizer = Adam(
-    model.parameters(),
-    lr=cfg.LEARNING_RATE,
-)
+    criterion = get_loss()
 
-loss, acc = train_one_epoch(
-    model,
-    train_loader,
-    optimizer,
-    criterion,
-    cfg.DEVICE,
-)
+    optimizer = get_optimizer(model)
 
-print(loss)
-print(acc)
+    scheduler = get_scheduler(optimizer)
+
+    fit(
+        model,
+        train_loader,
+        val_loader,
+        optimizer,
+        criterion,
+        scheduler,
+        cfg.DEVICE,
+        cfg.EPOCHS,
+    )
+
+
+if __name__ == "__main__":
+    main()
