@@ -1,7 +1,9 @@
 import torch
 
-from src.models.metrics import accuracy
 from src.models.checkpoint import save_checkpoint
+from src.training.early_stopping import EarlyStopping
+
+from configs.config import cfg
 
 
 def train_one_epoch(
@@ -96,7 +98,11 @@ def fit(
     epochs,
 ):
 
-    best_acc = 0
+    best_acc = 0.0
+
+    early_stopping = EarlyStopping(
+        patience=cfg.EARLY_STOPPING_PATIENCE
+    )
 
     history = {
         "train_loss": [],
@@ -130,7 +136,7 @@ def fit(
         history["val_acc"].append(val_acc)
 
         print(
-            f"Epoch [{epoch+1}/{epochs}] "
+            f"Epoch [{epoch + 1}/{epochs}] "
             f"Train Loss: {train_loss:.4f} "
             f"Train Acc: {train_acc:.4f} "
             f"Val Loss: {val_loss:.4f} "
@@ -147,5 +153,19 @@ def fit(
                 epoch,
                 best_acc,
             )
+
+        if early_stopping.step(val_acc):
+
+            print(
+                f"\nEarly stopping triggered after "
+                f"{epoch + 1} epochs."
+            )
+
+            print(
+                f"Best Validation Accuracy: "
+                f"{best_acc:.4f}"
+            )
+
+            break
 
     return history
