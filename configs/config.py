@@ -8,7 +8,9 @@ Nothing should be hardcoded elsewhere.
 from dataclasses import dataclass
 from pathlib import Path
 import torch
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # ===========================
 # Project Paths
@@ -42,6 +44,30 @@ for directory in [
 ]:
     directory.mkdir(parents=True, exist_ok=True)
 
+# ===========================
+# LLM Configuration
+# ===========================
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+LLM_MODEL = "gemini-3.5-flash"
+
+# ===========================
+# Dataset Configuration
+# ===========================
+
+# ===========================
+# Dataset Configuration
+# ===========================
+
+CLASS_NAMES = [
+    "Covid-19",
+    "Emphysema",
+    "Normal",
+    "Pneumonia-Bacterial",
+    "Pneumonia-Viral",
+    "Tuberculosis",
+]
 
 @dataclass
 class Config:

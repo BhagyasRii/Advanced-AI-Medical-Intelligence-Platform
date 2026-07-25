@@ -1,28 +1,22 @@
 """
-Post-processing utilities for model predictions.
+Post-processing utilities.
 
-Converts raw model outputs (logits) into
-human-readable prediction results.
+Converts raw logits into a structured
+PredictionResult object.
 """
 
 import torch
 
-from configs.config import cfg
+from configs.config import cfg,CLASS_NAMES
+
+from src.llm.schemas import PredictionResult
 
 
 def postprocess_predictions(
     logits: torch.Tensor,
-) -> dict:
+) -> PredictionResult:
     """
-    Convert raw logits into structured predictions.
-
-    Args:
-        logits:
-            Raw model output.
-
-    Returns:
-        Dictionary containing prediction,
-        confidence and class probabilities.
+    Convert logits into PredictionResult.
     """
 
     probabilities = torch.softmax(
@@ -37,24 +31,24 @@ def postprocess_predictions(
 
     predicted_idx = predicted_idx.item()
 
-    prediction = cfg.CLASS_NAMES[predicted_idx]
-
     probability_dict = {
         class_name: round(
             probabilities[0][idx].item() * 100,
             2,
         )
         for idx, class_name in enumerate(
-            cfg.CLASS_NAMES
+            CLASS_NAMES
         )
     }
 
-    return {
-        "prediction": prediction,
-        "predicted_index": predicted_idx,
-        "confidence": round(
+    return PredictionResult(
+        prediction=CLASS_NAMES[
+            predicted_idx
+        ],
+        predicted_index=predicted_idx,
+        confidence=round(
             confidence.item() * 100,
             2,
         ),
-        "probabilities": probability_dict,
-    }
+        probabilities=probability_dict,
+    )
