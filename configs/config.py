@@ -28,6 +28,8 @@ METRICS_DIR = OUTPUT_DIR / "metrics"
 
 GRADCAM_DIR = OUTPUT_DIR / "gradcam"
 
+LOG_DIR: Path = OUTPUT_DIR / "logs"
+
 
 # Create directories automatically
 for directory in [

@@ -5,7 +5,7 @@ Checkpoint utilities.
 import torch
 from pathlib import Path
 
-from configs.config import cfg
+from configs.config import CHECKPOINT_DIR, cfg
 
 
 def save_checkpoint(model, optimizer, epoch, best_acc):
@@ -17,7 +17,7 @@ def save_checkpoint(model, optimizer, epoch, best_acc):
         "best_accuracy": best_acc,
     }
 
-    path = Path(cfg.CHECKPOINT_DIR) / "best_model.pth"
+    path = CHECKPOINT_DIR / "best_model.pth"
 
     torch.save(checkpoint, path)
 
