@@ -1,7 +1,8 @@
 """
 Run inference on a single chest X-ray image.
 
-Pipeline:
+Pipeline
+
 Image
     ↓
 Prediction
@@ -15,32 +16,31 @@ Save Result
 
 from pathlib import Path
 
-import torch
+from configs.config import CHECKPOINT_DIR, cfg
 
-from configs.config import cfg, CHECKPOINT_DIR
-
-from src.models.densenet121 import build_model
+from src.inference.loader import load_model
+from src.inference.predictor import predict_image
 
 from src.explainability.gradcam import GradCAMGenerator
-from src.explainability.utils import (
-    preprocess_image,
-    get_prediction,
-)
+from src.explainability.utils import preprocess_image
 from src.explainability.visualize import (
     load_image,
     overlay_heatmap,
     save_visualization,
 )
 
-
 # ----------------------------------------------------
-# CHANGE THIS TO YOUR TEST IMAGE
+# Temporary test image
+# (Will be replaced with CLI/FastAPI input later.)
 # ----------------------------------------------------
 
 IMAGE_PATH = "sample_images/test.jpg"
 
 
-def main():
+def main() -> None:
+    """
+    Run the complete inference pipeline.
+    """
 
     image_path = Path(IMAGE_PATH)
 
@@ -49,58 +49,55 @@ def main():
             f"Image not found: {image_path}"
         )
 
-    # -----------------------------
-    # Load model
-    # -----------------------------
+    # -------------------------------------------------
+    # Load trained model
+    # -------------------------------------------------
 
-    model = build_model().to(cfg.DEVICE)
-
-    checkpoint = torch.load(
-        CHECKPOINT_DIR / "best_model.pth",
-        map_location=cfg.DEVICE,
+    model = load_model(
+        CHECKPOINT_DIR / "best_model.pth"
     )
 
-    model.load_state_dict(
-        checkpoint["model_state_dict"]
+    # -------------------------------------------------
+    # Disease prediction
+    # -------------------------------------------------
+
+    result = predict_image(
+        model=model,
+        image_path=image_path,
     )
 
-    model.eval()
+    print("\nPrediction Result")
+    print("-" * 50)
+    print(f"Prediction : {result['prediction']}")
+    print(f"Confidence : {result['confidence']}%")
 
-    # -----------------------------
-    # Image preprocessing
-    # -----------------------------
+    print("\nClass Probabilities")
+    print("-" * 50)
 
-    image_tensor = preprocess_image(
-        image_path
-    )
+    for disease, score in result["probabilities"].items():
+        print(f"{disease:<25} {score:>6.2f}%")
 
-    # -----------------------------
-    # Prediction
-    # -----------------------------
-
-    prediction, confidence = get_prediction(
-        model,
-        image_tensor,
-    )
-
-    print(f"Prediction : {prediction}")
-    print(f"Confidence : {confidence:.4f}")
-
-    # -----------------------------
-    # Grad-CAM
-    # -----------------------------
+    # -------------------------------------------------
+    # Generate Grad-CAM
+    # -------------------------------------------------
 
     gradcam = GradCAMGenerator(model)
 
+    image_tensor = preprocess_image(
+        str(image_path)
+    ).to(cfg.DEVICE)
+
     heatmap, predicted_class = gradcam.generate(
-        image_tensor=image_tensor.to(cfg.DEVICE)
+        image_tensor=image_tensor,
     )
 
-    # -----------------------------
-    # Visualization
-    # -----------------------------
+    # -------------------------------------------------
+    # Overlay heatmap
+    # -------------------------------------------------
 
-    original_image = load_image(image_path)
+    original_image = load_image(
+        str(image_path)
+    )
 
     visualization = overlay_heatmap(
         original_image,
@@ -109,10 +106,13 @@ def main():
 
     output_path = save_visualization(
         visualization,
-        image_path.stem + "_gradcam.png",
+        f"{image_path.stem}_gradcam.png",
     )
 
-    print(f"Grad-CAM saved to: {output_path}")
+    print("\nGrad-CAM")
+    print("-" * 50)
+    print(f"Predicted Class Index : {predicted_class}")
+    print(f"Saved To              : {output_path}")
 
 
 if __name__ == "__main__":
