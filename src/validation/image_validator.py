@@ -7,7 +7,7 @@ from pathlib import Path
 from PIL import Image
 from PIL import UnidentifiedImageError
 
-from .exceptions import InvalidImageError
+from .exceptions import CorruptedImageError
 
 MIN_WIDTH = 224
 MIN_HEIGHT = 224
@@ -49,18 +49,18 @@ def validate_image(
             width, height = image.size
 
     except UnidentifiedImageError as exc:
-        raise InvalidImageError(
+        raise CorruptedImageError(
             "Invalid image file."
         ) from exc
 
     except Exception as exc:
-        raise InvalidImageError(
+        raise CorruptedImageError(
             "Unable to process image."
         ) from exc
 
     if width < MIN_WIDTH or height < MIN_HEIGHT:
 
-        raise InvalidImageError(
+        raise CorruptedImageError(
             f"Image size must be at least "
             f"{MIN_WIDTH}x{MIN_HEIGHT}px."
         )

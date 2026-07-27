@@ -1,54 +1,49 @@
-"""
-Post-processing utilities.
-
-Converts raw logits into a structured
-PredictionResult object.
-"""
+from dataclasses import dataclass,field
 
 import torch
+import torch.nn.functional as F
 
-from configs.config import cfg,CLASS_NAMES
-
-from src.llm.schemas import PredictionResult
+from configs.config import cfg
 
 
-def postprocess_predictions(
-    logits: torch.Tensor,
-) -> PredictionResult:
+
+@dataclass
+class PredictionResult:
+    predicted_index: int
+    prediction: str
+    confidence: float
+    probabilities: dict
+    gradcam_path: str | None = field(default=None)
+
+
+def postprocess_predictions(logits: torch.Tensor) -> PredictionResult:
     """
-    Convert logits into PredictionResult.
+    Convert raw model logits into a structured prediction.
     """
 
-    probabilities = torch.softmax(
-        logits,
-        dim=1,
-    )
+    probabilities = F.softmax(logits, dim=1)[0]
 
-    confidence, predicted_idx = torch.max(
+    confidence, predicted_index = torch.max(
         probabilities,
-        dim=1,
+        dim=0,
     )
 
-    predicted_idx = predicted_idx.item()
+    confidence = float(confidence.item())
 
-    probability_dict = {
-        class_name: round(
-            probabilities[0][idx].item() * 100,
-            2,
+    predicted_index = int(predicted_index.item())
+
+    probability_dict = {}
+
+    for index, class_name in enumerate(cfg.CLASS_NAMES):
+
+        probability_dict[class_name] = round(
+            float(probabilities[index].item()),
+            4,
         )
-        for idx, class_name in enumerate(
-            CLASS_NAMES
-        )
-    }
 
     return PredictionResult(
-        prediction=CLASS_NAMES[
-            predicted_idx
-        ],
-        predicted_index=predicted_idx,
-        confidence=round(
-            confidence.item() * 100,
-            2,
-        ),
+        predicted_index=predicted_index,
+        prediction=cfg.CLASS_NAMES[predicted_index],
+        confidence=confidence,
         probabilities=probability_dict,
     )

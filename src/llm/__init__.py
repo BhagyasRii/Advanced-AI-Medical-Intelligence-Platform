@@ -2,17 +2,10 @@
 LLM Package
 """
 
-from .report_generator import (
-    generate_medical_report,
-)
-
-from .schemas import (
-    PredictionResult,
-    MedicalReport,
-)
+from .report_generator import generate_medical_report
+from .schemas import MedicalReport
 
 __all__ = [
-    "PredictionResult",
     "MedicalReport",
     "generate_medical_report",
 ]

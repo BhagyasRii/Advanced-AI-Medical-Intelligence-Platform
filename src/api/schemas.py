@@ -1,18 +1,21 @@
 from pydantic import BaseModel
-from typing import Dict
 
-
-class MedicalReportResponse(BaseModel):
-    diagnosis: str
-    findings: str
-    confidence_analysis: str
-    recommendations: str
-    patient_explanation: str
-    disclaimer: str
+from src.llm.schemas import MedicalReport
 
 
 class PredictionResponse(BaseModel):
+
+    id: int
+    
     prediction: str
-    confidence: float
-    probabilities: Dict[str, float]
-    medical_report: MedicalReportResponse
+
+    medical_report: MedicalReport
+
+
+class PredictionHistoryResponse(BaseModel):
+
+    id: int
+
+    prediction: str
+
+    created_at: str

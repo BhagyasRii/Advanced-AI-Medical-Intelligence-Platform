@@ -1,51 +1,60 @@
-"""
-Pydantic schemas for the LLM module.
-"""
-
-from typing import Dict
-
 from pydantic import BaseModel, Field
 
 
-class PredictionResult(BaseModel):
-    """
-    Structured prediction returned by the inference pipeline.
-    """
-
-    prediction: str = Field(
-        ...,
-        description="Predicted disease.",
-    )
-
-    predicted_index: int = Field(
-        ...,
-        description="Predicted class index.",
-    )
-
-    confidence: float = Field(
-        ...,
-        description="Prediction confidence percentage.",
-    )
-
-    probabilities: Dict[str, float] = Field(
-        ...,
-        description="Probability distribution.",
-    )
-
-
 class MedicalReport(BaseModel):
-    """
-    AI-generated medical report.
-    """
 
-    diagnosis: str
+    diagnosis: str = Field(
+        description="Primary diagnosis predicted from the AI analysis."
+    )
 
-    findings: str
+    severity: str = Field(
+        description="Overall severity classification."
+    )
 
-    confidence_analysis: str
+    report_summary: str = Field(
+        description="Executive summary of the report."
+    )
 
-    recommendations: str
+    radiological_findings: str = Field(
+        description="Detailed radiological observations."
+    )
 
-    patient_explanation: str
+    clinical_interpretation: str = Field(
+        description="Clinical interpretation of the imaging findings."
+    )
 
-    disclaimer: str
+    possible_conditions: str = Field(
+        description="Possible diseases or differential diagnosis."
+    )
+
+    health_risk_assessment: str = Field(
+        description="Overall health risk assessment."
+    )
+
+    lifestyle_recommendations: str = Field(
+        description="Lifestyle recommendations."
+    )
+
+    habits_to_adopt: list[str] = Field(
+        description="Healthy habits the patient should adopt."
+    )
+
+    habits_to_avoid: list[str] = Field(
+        description="Habits or environmental factors the patient should avoid."
+    )
+
+    follow_up_recommendations: str = Field(
+        description="Recommended follow-up."
+    )
+
+    warning_signs: list[str] = Field(
+        description="Symptoms that require immediate medical attention."
+    )
+
+    patient_guidance: str = Field(
+        description="Easy-to-understand explanation for patients."
+    )
+
+    disclaimer: str = Field(
+        description="Medical disclaimer."
+    )

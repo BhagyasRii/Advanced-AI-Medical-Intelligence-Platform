@@ -1,13 +1,21 @@
 """
-File validation utilities.
+Validation utilities for uploaded medical images.
 """
 
 from pathlib import Path
 
-from .exceptions import (
-    InvalidFileError,
-    UnsupportedFormatError,
+from PIL import Image
+
+from configs.config import cfg
+
+from src.validation.exceptions import (
+    CorruptedImageError,
+    EmptyFileError,
+    FileNotFoundError,
+    FileTooLargeError,
+    InvalidFileTypeError,
 )
+
 
 SUPPORTED_EXTENSIONS = {
     ".jpg",
@@ -16,50 +24,30 @@ SUPPORTED_EXTENSIONS = {
 }
 
 
-def validate_file(
-    file_path: str | Path,
-) -> Path:
+MAX_FILE_SIZE_MB = 10
+
+
+def validate_file(file_path: str | Path) -> Path:
     """
-    Validate a file before image processing.
-
-    Parameters
-    ----------
-    file_path : str | Path
-        Path to the uploaded file.
-
-    Returns
-    -------
-    Path
-        Validated Path object.
-
-    Raises
-    ------
-    InvalidFileError
-    UnsupportedFormatError
+    Validate file existence, extension, and size.
     """
 
     file_path = Path(file_path)
 
     if not file_path.exists():
-        raise InvalidFileError(
-            f"File not found: {file_path}"
-        )
+        raise FileNotFoundError()
 
-    if not file_path.is_file():
-        raise InvalidFileError(
-            f"Not a valid file: {file_path}"
-        )
+    if file_path.suffix.lower() not in SUPPORTED_EXTENSIONS:
+        raise InvalidFileTypeError()
 
     if file_path.stat().st_size == 0:
-        raise InvalidFileError(
-            "Uploaded file is empty."
-        )
+        raise EmptyFileError()
 
-    extension = file_path.suffix.lower()
+    file_size_mb = file_path.stat().st_size / (1024 * 1024)
 
-    if extension not in SUPPORTED_EXTENSIONS:
-        raise UnsupportedFormatError(
-            f"Unsupported file format: {extension}"
-        )
+    if file_size_mb > MAX_FILE_SIZE_MB:
+        raise FileTooLargeError(MAX_FILE_SIZE_MB)
 
     return file_path
+
+

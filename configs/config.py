@@ -1,107 +1,124 @@
 """
-Central configuration for the Medical AI Platform.
-
-All project settings are defined here.
-Nothing should be hardcoded elsewhere.
+Central configuration for the Advanced AI Medical Intelligence Platform.
 """
 
 from dataclasses import dataclass
 from pathlib import Path
-import torch
+from urllib.parse import quote_plus
 import os
-from dotenv import load_dotenv
-load_dotenv()
 
-# ===========================
-# Project Paths
-# ===========================
+import torch
+from dotenv import load_dotenv
+
+
+# ==========================================================
+# Project Root
+# ==========================================================
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-DATA_DIR = PROJECT_ROOT / "data"
+ENV_PATH = PROJECT_ROOT / ".env"
 
-OUTPUT_DIR = PROJECT_ROOT / "outputs"
-
-CHECKPOINT_DIR = OUTPUT_DIR / "checkpoints"
-
-PLOTS_DIR = OUTPUT_DIR / "plots"
-
-METRICS_DIR = OUTPUT_DIR / "metrics"
-
-GRADCAM_DIR = OUTPUT_DIR / "gradcam"
-
-LOG_DIR: Path = OUTPUT_DIR / "logs"
+load_dotenv(ENV_PATH)
 
 
-# Create directories automatically
-for directory in [
-    DATA_DIR,
-    OUTPUT_DIR,
-    CHECKPOINT_DIR,
-    PLOTS_DIR,
-    METRICS_DIR,
-    GRADCAM_DIR,
-]:
-    directory.mkdir(parents=True, exist_ok=True)
-
-# ===========================
-# LLM Configuration
-# ===========================
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-LLM_MODEL = "gemini-3.5-flash"
-
-# ===========================
-# Dataset Configuration
-# ===========================
-
-# ===========================
-# Dataset Configuration
-# ===========================
-
-CLASS_NAMES = [
-    "Covid-19",
-    "Emphysema",
-    "Normal",
-    "Pneumonia-Bacterial",
-    "Pneumonia-Viral",
-    "Tuberculosis",
-]
+# ==========================================================
+# Configuration
+# ==========================================================
 
 @dataclass
 class Config:
-    """
-    Global project configuration.
-    """
 
-    # --------------------------
+    # ------------------------------------------------------
+    # Project Paths
+    # ------------------------------------------------------
+
+    PROJECT_ROOT: Path = PROJECT_ROOT
+
+    DATA_DIR: Path = PROJECT_ROOT / "data"
+
+    OUTPUT_DIR: Path = PROJECT_ROOT / "outputs"
+
+    CHECKPOINT_DIR: Path = PROJECT_ROOT / "outputs" / "checkpoints"
+
+    PLOTS_DIR: Path = PROJECT_ROOT / "outputs" / "plots"
+
+    METRICS_DIR: Path = PROJECT_ROOT / "outputs" / "metrics"
+
+    GRADCAM_DIR: Path = PROJECT_ROOT / "outputs" / "gradcam"
+
+    LOG_DIR: Path = PROJECT_ROOT / "logs"
+
+    UPLOAD_DIR: Path = PROJECT_ROOT / "uploads"
+
+    MODEL_PATH: Path = PROJECT_ROOT / "artifacts" / "best_model.pth"
+
+    # ------------------------------------------------------
+    # Database
+    # ------------------------------------------------------
+
+    MYSQL_HOST: str = os.getenv("MYSQL_HOST", "localhost")
+
+    MYSQL_PORT: str = os.getenv("MYSQL_PORT", "3306")
+
+    MYSQL_USER: str = os.getenv("MYSQL_USER", "root")
+
+    MYSQL_PASSWORD: str = os.getenv("MYSQL_PASSWORD", "")
+
+    MYSQL_DATABASE: str = os.getenv("MYSQL_DATABASE", "medical_ai")
+
+    @property
+    def DATABASE_URL(self) -> str:
+
+        return (
+            f"mysql+pymysql://"
+            f"{self.MYSQL_USER}:"
+            f"{quote_plus(self.MYSQL_PASSWORD)}@"
+            f"{self.MYSQL_HOST}:"
+            f"{self.MYSQL_PORT}/"
+            f"{self.MYSQL_DATABASE}"
+        )
+
+    # ------------------------------------------------------
+    # LLM
+    # ------------------------------------------------------
+
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+
+    LLM_MODEL = "gemini-3.5-flash-lite"
+
+    # ------------------------------------------------------
     # Dataset
-    # --------------------------
+    # ------------------------------------------------------
 
-    DATASET_NAME: str = "mohamedasak/chest-x-ray-6-classes-dataset"
-
-    IMAGE_SIZE: int = 224
+    CLASS_NAMES = (
+        "Covid-19",
+        "Emphysema",
+        "Normal",
+        "Pneumonia-Bacterial",
+        "Pneumonia-Viral",
+        "Tuberculosis",
+    )
 
     NUM_CLASSES: int = 6
 
-    NUM_WORKERS: int = 2
+    IMAGE_SIZE: int = 224
 
-    PIN_MEMORY: bool = True
+    # ------------------------------------------------------
+    # Validation
+    # ------------------------------------------------------
 
+    MAX_UPLOAD_SIZE_MB: int = 10
 
-    # --------------------------
-    # Model
-    # --------------------------
+    SUPPORTED_IMAGE_FORMATS = (
+        ".jpg",
+        ".jpeg",
+        ".png",
+    )
 
-    MODEL_NAME: str = "densenet121"
-
-    PRETRAINED: bool = True
-
-
-    # --------------------------
+    # ------------------------------------------------------
     # Training
-    # --------------------------
+    # ------------------------------------------------------
 
     BATCH_SIZE: int = 32
 
@@ -109,25 +126,19 @@ class Config:
 
     LEARNING_RATE: float = 1e-4
 
-    FINE_TUNE_LR: float = 1e-4
-
     WEIGHT_DECAY: float = 1e-4
-
-    EARLY_STOPPING_PATIENCE: int = 5
 
     PATIENCE: int = 5
 
+    NUM_WORKERS: int = 2
 
-    # --------------------------
-    # Randomness
-    # --------------------------
+    PIN_MEMORY: bool = True
 
     SEED: int = 42
 
-
-    # --------------------------
+    # ------------------------------------------------------
     # Device
-    # --------------------------
+    # ------------------------------------------------------
 
     DEVICE: str = (
         "cuda"
@@ -137,3 +148,31 @@ class Config:
 
 
 cfg = Config()
+
+
+# ==========================================================
+# Create Required Directories
+# ==========================================================
+
+for directory in (
+    cfg.DATA_DIR,
+    cfg.OUTPUT_DIR,
+    cfg.CHECKPOINT_DIR,
+    cfg.PLOTS_DIR,
+    cfg.METRICS_DIR,
+    cfg.GRADCAM_DIR,
+    cfg.LOG_DIR,
+    cfg.UPLOAD_DIR,
+):
+    directory.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+
+print("Loading .env from:", ENV_PATH)
+print("MYSQL_HOST:", cfg.MYSQL_HOST)
+print("MYSQL_PORT:", cfg.MYSQL_PORT)
+print("MYSQL_USER:", cfg.MYSQL_USER)
+print("MYSQL_DATABASE:", cfg.MYSQL_DATABASE)
+print("DATABASE_URL =", cfg.DATABASE_URL)

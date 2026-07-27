@@ -1,7 +1,6 @@
 import torch
 
-from configs.config import cfg
-
+from configs.config import CHECKPOINT_DIR,cfg
 from src.data.download import download_dataset
 from src.data.dataset import ChestXRayDataset
 from src.data.loaders import create_loaders
@@ -21,7 +20,7 @@ def main():
     model = build_model().to(cfg.DEVICE)
 
     checkpoint = torch.load(
-        cfg.CHECKPOINT_DIR / "best_model.pth",
+        CHECKPOINT_DIR / "best_model.pth",
         map_location=cfg.DEVICE,
     )
 

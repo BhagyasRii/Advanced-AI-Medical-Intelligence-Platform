@@ -1,117 +1,58 @@
-"""
-Prompt engineering utilities for Gemini.
-"""
-
-from src.llm.schemas import PredictionResult
+from src.inference.postprocess import PredictionResult
 
 
-def build_prompt(
-    prediction: PredictionResult,
-) -> str:
-    """
-    Build a detailed prompt for the LLM.
-    """
-
-    probability_table = "\n".join(
-        [
-            f"- {disease}: {score:.2f}%"
-            for disease, score in prediction.probabilities.items()
-        ]
-    )
+def build_prompt(prediction: PredictionResult) -> str:
 
     return f"""
-============================================================
-ROLE
-============================================================
+You are an experienced board-certified Radiologist and Pulmonologist.
 
-You are a board-certified consultant radiologist with over
-15 years of experience in interpreting chest X-ray images.
+Your responsibility is to generate a comprehensive medical report based ONLY on the AI prediction provided.
 
-You are assisting clinicians by reviewing the output of an
-AI-powered medical image analysis system.
-
-You DO NOT replace a physician.
-
-============================================================
-OBJECTIVE
-============================================================
-
-Generate a structured, professional medical report based
-ONLY on the AI prediction supplied below.
-
-============================================================
-AI MODEL INFORMATION
-============================================================
-
-Model Architecture:
-DenseNet121
-
-Imaging Modality:
-Chest X-Ray
-
-============================================================
-PREDICTION
-============================================================
-
-Predicted Disease:
+Prediction:
 {prediction.prediction}
 
-Confidence:
-{prediction.confidence:.2f}%
+Model Confidence:
+{prediction.confidence:.2%}
 
-Probability Distribution:
+Rules:
 
-{probability_table}
+• Produce professional clinical language.
 
-============================================================
-RULES
-============================================================
+• Also explain everything in simple language for patients.
 
-1. Never fabricate clinical findings.
+• Never claim that the diagnosis is confirmed.
 
-2. Never diagnose diseases not supported by the prediction.
+• Clearly mention that imaging findings should always be correlated with clinical evaluation.
 
-3. Clearly distinguish AI prediction from confirmed diagnosis.
+• Explain possible causes.
 
-4. Explain the confidence appropriately.
+• Explain disease severity.
 
-5. Recommend physician review.
+• Explain health risks.
 
-6. Mention that additional clinical correlation may be required.
+• Give practical lifestyle recommendations.
 
-7. Use professional medical terminology.
+• Include healthy habits.
 
-8. Do not mention information not provided.
+• Include habits to avoid.
 
-============================================================
-OUTPUT FORMAT
-============================================================
+• Mention follow-up recommendations.
 
-Diagnosis:
+• Mention warning signs that require urgent medical attention.
 
-Findings:
+• Recommendations must be specific to the predicted disease.
 
-Confidence Analysis:
+• Return ONLY valid JSON matching the provided schema.
 
-Recommendations:
+• Do not use Markdown.
 
-Patient-Friendly Explanation:
+• Do not use bullet formatting except for JSON arrays.
 
-Disclaimer:
+• Never invent patient history.
 
-============================================================
-SELF VERIFICATION
-============================================================
+• Never recommend prescription medicines.
 
-Before responding ensure that:
+• Never guarantee recovery.
 
-✓ All sections are present.
-
-✓ No hallucinated patient information exists.
-
-✓ No unsupported diagnosis is introduced.
-
-✓ Professional medical language is maintained.
-
-✓ The report is concise (maximum 300 words).
-""".strip()
+Generate a complete medical report.
+"""

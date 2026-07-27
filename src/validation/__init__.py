@@ -1,22 +1,26 @@
 """
-Validation package.
+Validation package exports.
 """
-
-from .exceptions import (
-    ValidationError,
-    InvalidFileError,
-    UnsupportedFormatError,
-    InvalidImageError,
-)
 
 from .file_validator import validate_file
 from .image_validator import validate_image
 
+from .exceptions import (
+    ValidationException,
+    InvalidFileTypeError,
+    FileTooLargeError,
+    EmptyFileError,
+    CorruptedImageError,
+    FileNotFoundError,
+)
+
 __all__ = [
-    "ValidationError",
-    "InvalidFileError",
-    "UnsupportedFormatError",
-    "InvalidImageError",
     "validate_file",
     "validate_image",
+    "ValidationException",
+    "InvalidFileTypeError",
+    "FileTooLargeError",
+    "EmptyFileError",
+    "CorruptedImageError",
+    "FileNotFoundError",
 ]

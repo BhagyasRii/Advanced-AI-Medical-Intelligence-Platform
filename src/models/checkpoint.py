@@ -26,7 +26,10 @@ def save_checkpoint(model, optimizer, epoch, best_acc):
 
 def load_checkpoint(path, model, optimizer=None):
 
-    checkpoint = torch.load(path)
+    checkpoint = torch.load(
+    path,
+    map_location="cpu",
+)
 
     model.load_state_dict(
         checkpoint["model_state_dict"]

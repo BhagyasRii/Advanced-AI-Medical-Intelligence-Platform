@@ -1,50 +1,60 @@
 """
 Model loader for inference.
-
-This module loads the trained model checkpoint and prepares
-the model for inference.
 """
 
 from pathlib import Path
 
 import torch
-from torch import nn
+import torch.nn as nn
+from torchvision import models
 
 from configs.config import cfg
-from src.models.densenet121 import build_model
 
 
-def load_model(
-    checkpoint_path: str | Path,
-) -> nn.Module:
+def load_model() -> nn.Module:
     """
-    Load a trained model checkpoint.
-
-    Args:
-        checkpoint_path:
-            Path to the checkpoint.
-
-    Returns:
-        Loaded PyTorch model.
+    Load the trained DenseNet121 model for inference.
+    Supports both:
+    1. Raw state_dict
+    2. Training checkpoint containing model_state_dict
     """
 
-    checkpoint_path = Path(checkpoint_path)
+    # Build model architecture
+    model = models.densenet121(weights=None)
 
-    if not checkpoint_path.exists():
+    model.classifier = nn.Linear(
+        model.classifier.in_features,
+        len(cfg.CLASS_NAMES),
+    )
+
+    weights_path = Path(cfg.MODEL_PATH)
+
+    if not weights_path.exists():
         raise FileNotFoundError(
-            f"Checkpoint not found: {checkpoint_path}"
+            f"Model weights not found: {weights_path}"
         )
 
-    model = build_model().to(cfg.DEVICE)
-
+    # Load checkpoint
     checkpoint = torch.load(
-        checkpoint_path,
+        weights_path,
         map_location=cfg.DEVICE,
     )
 
-    model.load_state_dict(
-        checkpoint["model_state_dict"]
-    )
+    # Support multiple checkpoint formats
+    if isinstance(checkpoint, dict):
+        if "model_state_dict" in checkpoint:
+            state_dict = checkpoint["model_state_dict"]
+        else:
+            state_dict = checkpoint
+    else:
+        raise ValueError(
+            "Unsupported checkpoint format."
+        )
+
+    # Load weights
+    model.load_state_dict(state_dict)
+
+    model.to(cfg.DEVICE)
 
     model.eval()
 

@@ -1,13 +1,20 @@
 import logging
 from pathlib import Path
 
-LOG_DIR = Path("outputs/logs")
-LOG_DIR.mkdir(parents=True, exist_ok=True)
-
-LOG_FILE = LOG_DIR / "api.log"
+from configs.config import cfg
 
 
-def get_logger(name: str):
+LOG_DIR = Path(cfg.LOG_DIR)
+LOG_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+
+LOG_FILE = LOG_DIR / "medical_ai.log"
+
+
+def get_logger(name):
 
     logger = logging.getLogger(name)
 
@@ -21,9 +28,10 @@ def get_logger(name: str):
     )
 
     file_handler = logging.FileHandler(LOG_FILE)
-    file_handler.setFormatter(formatter)
 
     console_handler = logging.StreamHandler()
+
+    file_handler.setFormatter(formatter)
     console_handler.setFormatter(formatter)
 
     logger.addHandler(file_handler)
